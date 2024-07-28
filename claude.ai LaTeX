@@ -1,0 +1,76 @@
+// ==UserScript==
+// @name         MathJax Renderer for Claude.ai
+// @namespace    http://tampermonkey.net/
+// @version      0.6
+// @description  Render LaTeX math formulas on Claude.ai using MathJax
+// @match        https://claude.ai/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Load MathJax
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS_CHTML';
+    document.head.appendChild(script);
+
+    // Configure MathJax
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+        },
+        CommonHTML: {linebreaks: {automatic: true}},
+        "HTML-CSS": {linebreaks: {automatic: true}},
+        SVG: {linebreaks: {automatic: true}}
+    };
+
+    // Render function
+    function renderMathJax() {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    }
+
+    // Create render button
+    var button = document.createElement('button');
+    button.textContent = 'Render LaTeX';
+    button.style.position = 'fixed';
+    button.style.bottom = '20px';
+    button.style.right = '20px';
+    button.style.zIndex = '9999';
+    button.style.padding = '10px 20px';
+    button.style.fontSize = '16px';
+    button.style.borderRadius = '5px';
+    button.style.border = '2px solid #333';
+    button.style.backgroundColor = 'rgba(255, 255, 255, 0.4)';
+    button.style.cursor = 'pointer';
+    button.style.transition = 'background-color 0.3s, transform 0.1s';
+
+    // Button effects
+    button.addEventListener('mouseenter', () => button.style.backgroundColor = 'rgba(255, 255, 255, 0.5)');
+    button.addEventListener('mouseleave', () => button.style.backgroundColor = 'rgba(255, 255, 255, 0.4)');
+    button.addEventListener('mousedown', () => button.style.transform = 'scale(0.95)');
+    button.addEventListener('mouseup', () => button.style.transform = 'scale(1)');
+
+    document.body.appendChild(button);
+
+    // Click event
+    button.addEventListener('click', renderMathJax);
+
+    // Initial render after a delay
+    setTimeout(renderMathJax, 2000);
+
+    // Set up MutationObserver to watch for new content
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                renderMathJax();
+            }
+        });
+    });
+
+    // Start observing the document with the configured parameters
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
